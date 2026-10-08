@@ -32,7 +32,7 @@ dev = [
     "reportlab==5.0.0 ; python_full_version >= '3.9' and python_full_version < '4'",
     "rlpycairo==0.4.0 ; python_full_version >= '3.7'",
     "space-tracer==4.13.0",
-    "svglib==2.2.0 ; python_full_version >= '3.9'",
+    "svglib==2.3.0 ; python_full_version >= '3.9'",
     "svgwrite==1.4.3 ; python_full_version >= '3.6'",
     "tinycss2==1.5.1 ; python_full_version >= '3.10'",
     "tomli==2.4.1 ; python_full_version >= '3.8'",
