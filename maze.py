@@ -2,13 +2,20 @@ import logging
 import math
 import random
 from collections import defaultdict
+from io import BytesIO
 from itertools import count
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
+import svgwrite
 from networkx import Graph
+from reportlab.lib import pagesizes
+from reportlab.platypus import SimpleDocTemplate, Flowable
+from svglib.svglib import svg2rlg
 from svgwrite import Drawing
 
+from grid_hint import GridHint
+from single_hint import SingleHint
 from tangram import Tangram
 from test_tan import LiveSvg
 
@@ -506,96 +513,52 @@ def add_tangrams(maze: Maze):
     gap = 0
     tangram = Tangram(50, gap)
     maze.add_tangram(tangram, 'T')
-    tangram.add(tangram.t2)
-    tangram.t2.rotate(-45)
-    tangram.add(tangram.t4a)
-    tangram.t4a.rotate(-225)
-    tangram.t4a.anchor(tangram.t2, 0, 1)
-    tangram.add(tangram.t4b)
-    tangram.t4b.rotate(90)
-    tangram.t4b.anchor(tangram.t4a, 2, 0)
-    tangram.add(tangram.s)
-    tangram.s.rotate(45)
-    tangram.s.anchor(tangram.t4a, 0, 2)
-    tangram.add(tangram.t1a)
-    tangram.t1a.rotate(-135)
-    tangram.t1a.anchor(tangram.t4b, 0, 1)
-    tangram.add(tangram.p)
-    tangram.p.rotate(45)
-    tangram.p.anchor(tangram.s, 0, 0)
-    tangram.p.translate(0, -tangram.p.height)
-    tangram.add(tangram.t1b)
-    tangram.t1b.rotate(45)
-    tangram.t1b.anchor(tangram.p, 2, 1)
+    layout_ship(tangram)
 
     tangram = Tangram(50, gap)
     maze.add_tangram(tangram, 'R')
-    tangram.add(tangram.t4a)
-    tangram.add(tangram.t4b)
-    tangram.t4b.rotate(180)
-    tangram.t4b.anchor(tangram.t4a, 2, 1)
-    tangram.add(tangram.p)
-    tangram.p.rotate(90)
-    tangram.p.anchor(tangram.t4a, 2, 1)
-    tangram.add(tangram.t1a)
-    tangram.t1a.rotate(90)
-    tangram.t1a.anchor(tangram.p, 2, 1)
-    tangram.add(tangram.t2)
-    tangram.t2.rotate(-45)
-    tangram.t2.anchor(tangram.p, 3, 0)
-    tangram.add(tangram.t1b)
-    tangram.t1b.anchor(tangram.t2, 0, 2)
-    tangram.add(tangram.s)
-    tangram.s.anchor(tangram.t1b, 0, 3)
-    tangram.flip()
-    tangram.rotate(180)
+    layout_fat_axe(tangram)
 
     tangram = Tangram(50, gap)
     maze.add_tangram(tangram, 'S')
-    tangram.add(tangram.t4a)
-    tangram.t4a.rotate(-90)
-    tangram.add(tangram.t4b)
-    tangram.t4b.rotate(180)
-    tangram.add(tangram.p)
-    tangram.p.anchor(tangram.t4a, 2, 1)
-    tangram.add(tangram.t2)
-    tangram.t2.rotate(-135)
-    tangram.t2.anchor(tangram.p, 3, 0)
-    tangram.add(tangram.t1a)
-    tangram.t1a.rotate(90)
-    tangram.t1a.anchor(tangram.t2, 1)
-    tangram.add(tangram.t1b)
-    tangram.t1b.rotate(-90)
-    tangram.t1b.anchor(tangram.t2, 0, 2)
-    tangram.add(tangram.s)
-    tangram.s.anchor(tangram.t1b, 0, 0)
-    tangram.s.translate(tangram.s.width/2, 0)
+    layout_top(tangram)
 
     tangram = Tangram(50, gap)
     maze.add_tangram(tangram, 'C')
-    tangram.add(tangram.t4a)
-    tangram.t4a.rotate(90)
-    tangram.add(tangram.t4b)
-    tangram.t4b.rotate(90)
-    tangram.t4b.anchor(tangram.t4a, 0, 1)
-    tangram.add(tangram.p)
-    tangram.p.flip()
-    tangram.p.anchor(tangram.t4a, 0, 1)
-    tangram.add(tangram.s)
-    tangram.s.anchor(tangram.t4b, 0, 2)
-    tangram.add(tangram.t1a)
-    tangram.t1a.rotate(90)
-    tangram.t1a.anchor(tangram.s)
-    tangram.add(tangram.t2)
-    tangram.t2.rotate(-135)
-    tangram.t2.anchor(tangram.s)
-    tangram.add(tangram.t1b)
-    tangram.t1b.rotate(180)
-    tangram.t1b.anchor(tangram.s, 1)
-    tangram.rotate(270)
+    layout_saw(tangram)
 
     tangram = Tangram(50, gap)
     maze.add_tangram(tangram, 'E')
+    layout_thin_axe(tangram)
+
+    tangram = Tangram(50, gap)
+    maze.add_tangram(tangram, 'A')
+    layout_tug(tangram)
+
+
+def layout_tug(tangram: Tangram):
+    tangram.add(tangram.t4a)
+    tangram.t4a.rotate(-90)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.t4a, 1, 1)
+    tangram.add(tangram.t4b)
+    tangram.t4b.rotate(90)
+    tangram.t4b.anchor(tangram.s)
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(45)
+    tangram.t2.anchor(tangram.t4b, 2)
+    tangram.add(tangram.t1a)
+    tangram.t1a.rotate(-90)
+    tangram.t1a.anchor(tangram.t4b, 1, 2)
+    tangram.add(tangram.p)
+    tangram.p.rotate(45)
+    tangram.p.anchor(tangram.t4b, 1)
+    tangram.add(tangram.t1b)
+    tangram.t1b.rotate(-135)
+    tangram.t1b.anchor(tangram.p, 1)
+
+
+def layout_thin_axe(tangram: Tangram):
     tangram.add(tangram.s)
     tangram.add(tangram.t1a)
     tangram.t1a.anchor(tangram.s, 3)
@@ -619,27 +582,177 @@ def add_tangrams(maze: Maze):
     tangram.flip()
     tangram.rotate(180)
 
-    tangram = Tangram(50, gap)
-    maze.add_tangram(tangram, 'A')
+
+def layout_saw(tangram: Tangram):
     tangram.add(tangram.t4a)
-    tangram.t4a.rotate(-90)
-    tangram.add(tangram.s)
-    tangram.s.anchor(tangram.t4a, 1, 1)
+    tangram.t4a.rotate(90)
     tangram.add(tangram.t4b)
     tangram.t4b.rotate(90)
-    tangram.t4b.anchor(tangram.s)
-    tangram.add(tangram.t2)
-    tangram.t2.rotate(45)
-    tangram.t2.anchor(tangram.t4b, 2)
+    tangram.t4b.anchor(tangram.t4a, 0, 1)
+    tangram.add(tangram.p)
+    tangram.p.flip()
+    tangram.p.anchor(tangram.t4a, 0, 1)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.t4b, 0, 2)
     tangram.add(tangram.t1a)
-    tangram.t1a.rotate(-90)
-    tangram.t1a.anchor(tangram.t4b, 1, 2)
+    tangram.t1a.rotate(90)
+    tangram.t1a.anchor(tangram.s)
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(-135)
+    tangram.t2.anchor(tangram.s)
+    tangram.add(tangram.t1b)
+    tangram.t1b.rotate(180)
+    tangram.t1b.anchor(tangram.s, 1)
+    tangram.rotate(270)
+
+
+def layout_top(tangram: Tangram):
+    tangram.add(tangram.t4a)
+    tangram.t4a.rotate(-90)
+    tangram.add(tangram.t4b)
+    tangram.t4b.rotate(180)
+    tangram.add(tangram.p)
+    tangram.p.anchor(tangram.t4a, 2, 1)
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(-135)
+    tangram.t2.anchor(tangram.p, 3, 0)
+    tangram.add(tangram.t1a)
+    tangram.t1a.rotate(90)
+    tangram.t1a.anchor(tangram.t2, 1)
+    tangram.add(tangram.t1b)
+    tangram.t1b.rotate(-90)
+    tangram.t1b.anchor(tangram.t2, 0, 2)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.t1b, 0, 0)
+    tangram.s.translate(tangram.s.width / 2, 0)
+
+
+def layout_fat_axe(tangram: Tangram):
+    tangram.add(tangram.t4a)
+    tangram.add(tangram.t4b)
+    tangram.t4b.rotate(180)
+    tangram.t4b.anchor(tangram.t4a, 2, 1)
+    tangram.add(tangram.p)
+    tangram.p.rotate(90)
+    tangram.p.anchor(tangram.t4a, 2, 1)
+    tangram.add(tangram.t1a)
+    tangram.t1a.rotate(90)
+    tangram.t1a.anchor(tangram.p, 2, 1)
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(-45)
+    tangram.t2.anchor(tangram.p, 3, 0)
+    tangram.add(tangram.t1b)
+    tangram.t1b.anchor(tangram.t2, 0, 2)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.t1b, 0, 3)
+    tangram.flip()
+    tangram.rotate(180)
+
+
+def layout_ship(tangram: Tangram):
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(-45)
+    tangram.add(tangram.t4a)
+    tangram.t4a.rotate(-225)
+    tangram.t4a.anchor(tangram.t2, 0, 1)
+    tangram.add(tangram.t4b)
+    tangram.t4b.rotate(90)
+    tangram.t4b.anchor(tangram.t4a, 2, 0)
+    tangram.add(tangram.s)
+    tangram.s.rotate(45)
+    tangram.s.anchor(tangram.t4a, 0, 2)
+    tangram.add(tangram.t1a)
+    tangram.t1a.rotate(-135)
+    tangram.t1a.anchor(tangram.t4b, 0, 1)
     tangram.add(tangram.p)
     tangram.p.rotate(45)
-    tangram.p.anchor(tangram.t4b, 1)
+    tangram.p.anchor(tangram.s, 0, 0)
+    tangram.p.translate(0, -tangram.p.height)
     tangram.add(tangram.t1b)
-    tangram.t1b.rotate(-135)
-    tangram.t1b.anchor(tangram.p, 1)
+    tangram.t1b.rotate(45)
+    tangram.t1b.anchor(tangram.p, 2, 1)
+
+
+def write_hint_files():
+    hint_folder = Path(__file__).with_name('hints')
+    hint_folder.mkdir(exist_ok=True)
+    pdf_path = hint_folder / 'hints.pdf'
+    story: list[Flowable] = []
+    doc = SimpleDocTemplate(str(pdf_path),
+                            author='Don Kirkby',
+                            pagesize=pagesizes.letter,
+                            title='Tangram Hints')
+    add_hint_set(layout_fat_axe, hint_folder, story, 'fat_axe')
+    add_hint_set(layout_thin_axe, hint_folder, story, 'thin_axe', 't4a')
+    add_hint_set(layout_saw, hint_folder, story, 'saw')
+    add_hint_set(layout_tug, hint_folder, story, 'tug', 't4a')
+    add_hint_set(layout_top, hint_folder, story, 'top')
+    add_hint_set(layout_ship, hint_folder, story, 'ship')
+    doc.build(story)
+
+
+def add_hint_set(layout_function: Callable[..., None],
+                 hint_folder: Path,
+                 story: list[Flowable],
+                 set_name: str,
+                 highlight: str='t4b'):
+    scale = 623.461
+    gap = scale * 0.03
+    drawing_size = (1 * scale, 1 * scale)
+    ship_hint1 = Tangram(scale)
+    layout_function(ship_hint1)
+    add_hint(ship_hint1,
+             drawing_size,
+             hint_folder / f'{set_name}_hint1.svg',
+             story)
+
+    ship_hint2: Tangram = SingleHint(scale, gap, highlight)
+    layout_function(ship_hint2)
+    add_hint(ship_hint2,
+             drawing_size,
+             hint_folder / f'{set_name}_hint2.svg',
+             story)
+
+    ship_hint3 = GridHint(scale, gap, highlight)
+    layout_function(ship_hint3)
+    add_hint(ship_hint3,
+             drawing_size,
+             hint_folder / f'{set_name}_hint3.svg',
+             story)
+
+    ship_hint4 = Tangram(scale, gap)
+    layout_function(ship_hint4)
+    add_hint(ship_hint4,
+             drawing_size,
+             hint_folder / f'{set_name}_hint4.svg',
+             story)
+
+
+def add_hint(hint: Tangram, drawing_size: tuple[float | int, float | int], hint_path: Path, story: list[Flowable]):
+    drawing_width, drawing_height = drawing_size
+    left, bottom, right, top = hint.bounds
+    hint.translate(-left - (right-left)/2, -bottom - (top-bottom)/2)
+    drawing = svgwrite.Drawing(size=(right-left, top-bottom))
+    hint.draw(drawing)
+    hint_path.write_text(drawing.tostring())
+
+    drawing = svgwrite.Drawing(size=drawing_size)
+    hint.translate(drawing_width / 2, drawing_height / 2)
+    hint.translate(0, -drawing_size[1]*0.67)
+    hint.draw(drawing)
+    svg_bytes = drawing.tostring().encode()
+    pdf_drawing = svg2rlg(BytesIO(svg_bytes))
+    assert pdf_drawing is not None
+    story.append(pdf_drawing)
+
+    drawing = svgwrite.Drawing(size=drawing_size)
+    hint.translate(-drawing_size[0], 0)
+    hint.draw(drawing)
+    svg_text = drawing.tostring()
+    svg_bytes = svg_text.encode()
+    pdf_drawing = svg2rlg(BytesIO(svg_bytes))
+    assert pdf_drawing is not None
+    story.append(pdf_drawing)
 
 
 def main() -> None:
@@ -647,6 +760,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(levelname)s %(message)s')
     logger.info('Starting.')
+    write_hint_files()
     maze = Maze(width=77, height=55)
     maze.scale = 15
     maze.offset_x = 10

@@ -287,6 +287,25 @@ def test_anchor(image_differ: LiveImageDiffer):
 
 
 # noinspection DuplicatedCode
+def test_remove(image_differ: LiveImageDiffer):
+    expected = svgwrite.Drawing(size=(200, 200))
+    tangram1 = Tangram(scale=100)
+    tangram1.add(tangram1.t1a)
+    tangram1.draw(expected)
+
+    actual = svgwrite.Drawing(size=(200, 200))
+    tangram2 = Tangram(scale=100)
+    tangram2.add(tangram2.t1a)
+    tangram2.add(tangram2.t2)
+    tangram2.remove(tangram2.t2)
+    tangram2.draw(actual)
+
+    svg1 = LiveSvg(actual.tostring())
+    svg2 = LiveSvg(expected.tostring())
+    image_differ.assert_equal(svg1, svg2)
+
+
+# noinspection DuplicatedCode
 def test_anchor_and_rotate(image_differ: LiveImageDiffer):
     expected = svgwrite.Drawing(size=(200, 200))
     tangram1 = Tangram(scale=100)
