@@ -97,6 +97,10 @@ class TanGroup(Tan):
         for tan in self.all_tans:
             tan.translate(dx, dy)
 
+    def centre_on(self, x: float, y: float) -> None:
+        left, bottom, right, top = self.bounds
+        self.translate(x - (left+right)/2, y - (top+bottom)/2)
+
     @property
     def width(self):
         left, bottom, right, top = self.bounds

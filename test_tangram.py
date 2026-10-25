@@ -375,3 +375,22 @@ def test_rotate(image_differ: LiveImageDiffer):
     svg1 = LiveSvg(actual.tostring())
     svg2 = LiveSvg(expected.tostring())
     image_differ.assert_equal(svg1, svg2)
+
+
+# noinspection DuplicatedCode
+def test_centre_on(image_differ: LiveImageDiffer):
+    expected = svgwrite.Drawing(size=(200, 200))
+    expected_size = 25*Tangram.ROOT2
+    expected.add(expected.rect((100-expected_size/2, 100-expected_size/2),
+                               (expected_size, expected_size),
+                               fill='black'))
+
+    actual = svgwrite.Drawing(size=(200, 200))
+    tangram = Tangram(scale=100)
+    tangram.add(tangram.s)
+    tangram.centre_on(0, 0)  # Middle of drawing
+    tangram.draw(actual)
+
+    svg1 = LiveSvg(actual.tostring())
+    svg2 = LiveSvg(expected.tostring())
+    image_differ.assert_equal(svg1, svg2)

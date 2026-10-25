@@ -10,11 +10,10 @@ from typing import Any, Callable
 import svgwrite
 from networkx import Graph
 from reportlab.lib import pagesizes
-from reportlab.platypus import SimpleDocTemplate, Flowable
+from reportlab.platypus import SimpleDocTemplate, Flowable, PageBreak
 from svglib.svglib import svg2rlg
 from svgwrite import Drawing
 
-from grid_hint import GridHint
 from single_hint import SingleHint
 from tangram import Tangram
 from test_tan import LiveSvg
@@ -536,6 +535,10 @@ def add_tangrams(maze: Maze):
     layout_tug(tangram)
 
 
+def layout_empty(tangram: Tangram):
+    tangram.translate(0, 0)
+
+
 def layout_tug(tangram: Tangram):
     tangram.add(tangram.t4a)
     tangram.t4a.rotate(-90)
@@ -680,7 +683,7 @@ def write_hint_files():
     story: list[Flowable] = []
     doc = SimpleDocTemplate(str(pdf_path),
                             author='Don Kirkby',
-                            pagesize=pagesizes.letter,
+                            pagesize=pagesizes.landscape(pagesizes.letter),
                             title='Tangram Hints')
     add_hint_set(layout_fat_axe, hint_folder, story, 'fat_axe')
     add_hint_set(layout_thin_axe, hint_folder, story, 'thin_axe', 't4a')
@@ -696,62 +699,38 @@ def add_hint_set(layout_function: Callable[..., None],
                  story: list[Flowable],
                  set_name: str,
                  highlight: str='t4b'):
-    scale = 623.461
+    scale = 372
     gap = scale * 0.03
-    drawing_size = (1 * scale, 1 * scale)
-    ship_hint1 = Tangram(scale)
-    layout_function(ship_hint1)
-    add_hint(ship_hint1,
-             drawing_size,
-             hint_folder / f'{set_name}_hint1.svg',
-             story)
+    hint1 = Tangram(scale)
+    layout_function(hint1)
+    add_hint(hint1, hint_folder / f'{set_name}_hint1.svg', story)
 
-    ship_hint2: Tangram = SingleHint(scale, gap, highlight)
-    layout_function(ship_hint2)
-    add_hint(ship_hint2,
-             drawing_size,
-             hint_folder / f'{set_name}_hint2.svg',
-             story)
+    hint2: Tangram = SingleHint(scale, gap, highlight)
+    layout_function(hint2)
+    add_hint(hint2, hint_folder / f'{set_name}_hint2.svg', story)
 
-    ship_hint3 = GridHint(scale, gap, highlight)
-    layout_function(ship_hint3)
-    add_hint(ship_hint3,
-             drawing_size,
-             hint_folder / f'{set_name}_hint3.svg',
-             story)
-
-    ship_hint4 = Tangram(scale, gap)
-    layout_function(ship_hint4)
-    add_hint(ship_hint4,
-             drawing_size,
-             hint_folder / f'{set_name}_hint4.svg',
-             story)
+    hint3 = Tangram(scale, gap)
+    layout_function(hint3)
+    add_hint(hint3, hint_folder / f'{set_name}_hint3.svg', story)
 
 
-def add_hint(hint: Tangram, drawing_size: tuple[float | int, float | int], hint_path: Path, story: list[Flowable]):
-    drawing_width, drawing_height = drawing_size
+def add_hint(hint: Tangram, hint_path: Path, story: list[Flowable]):
     left, bottom, right, top = hint.bounds
     hint.translate(-left - (right-left)/2, -bottom - (top-bottom)/2)
+    # if (right - left) > pagesizes.letter[1]:
+    #     raise RuntimeError(
+    #         f'Hint is wider than US letter landscape: {hint_path.name}')
+
     drawing = svgwrite.Drawing(size=(right-left, top-bottom))
     hint.draw(drawing)
-    hint_path.write_text(drawing.tostring())
-
-    drawing = svgwrite.Drawing(size=drawing_size)
-    hint.translate(drawing_width / 2, drawing_height / 2)
-    hint.translate(0, -drawing_size[1]*0.67)
-    hint.draw(drawing)
-    svg_bytes = drawing.tostring().encode()
-    pdf_drawing = svg2rlg(BytesIO(svg_bytes))
-    assert pdf_drawing is not None
-    story.append(pdf_drawing)
-
-    drawing = svgwrite.Drawing(size=drawing_size)
-    hint.translate(-drawing_size[0], 0)
-    hint.draw(drawing)
     svg_text = drawing.tostring()
+    hint_path.write_text(svg_text)
+
     svg_bytes = svg_text.encode()
     pdf_drawing = svg2rlg(BytesIO(svg_bytes))
     assert pdf_drawing is not None
+    if story:
+        story.append(PageBreak())
     story.append(pdf_drawing)
 
 
