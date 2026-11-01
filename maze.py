@@ -14,7 +14,6 @@ from reportlab.platypus import SimpleDocTemplate, Flowable, PageBreak
 from svglib.svglib import svg2rlg
 from svgwrite import Drawing
 
-from single_hint import SingleHint
 from tangram import Tangram
 from test_tan import LiveSvg
 
@@ -685,36 +684,29 @@ def write_hint_files():
                             author='Don Kirkby',
                             pagesize=pagesizes.landscape(pagesizes.letter),
                             title='Tangram Hints')
-    add_hint_set(layout_fat_axe, hint_folder, story, 'fat_axe')
-    add_hint_set(layout_thin_axe, hint_folder, story, 'thin_axe', 't4a')
-    add_hint_set(layout_saw, hint_folder, story, 'saw')
-    add_hint_set(layout_tug, hint_folder, story, 'tug', 't4a')
-    add_hint_set(layout_top, hint_folder, story, 'top')
-    add_hint_set(layout_ship, hint_folder, story, 'ship')
+    add_hint_set(layout_fat_axe, story)
+    add_hint_set(layout_thin_axe, story)
+    add_hint_set(layout_saw, story)
+    add_hint_set(layout_tug, story)
+    add_hint_set(layout_top, story)
+    add_hint_set(layout_ship, story)
     doc.build(story)
 
 
 def add_hint_set(layout_function: Callable[..., None],
-                 hint_folder: Path,
-                 story: list[Flowable],
-                 set_name: str,
-                 highlight: str='t4b'):
+                 story: list[Flowable]) -> None:
     scale = 372
-    gap = scale * 0.03
-    hint1 = Tangram(scale)
-    layout_function(hint1)
-    add_hint(hint1, hint_folder / f'{set_name}_hint1.svg', story)
+    tangram = Tangram(scale)
+    layout_function(tangram)
 
-    hint2: Tangram = SingleHint(scale, gap, highlight)
-    layout_function(hint2)
-    add_hint(hint2, hint_folder / f'{set_name}_hint2.svg', story)
-
-    hint3 = Tangram(scale, gap)
-    layout_function(hint3)
-    add_hint(hint3, hint_folder / f'{set_name}_hint3.svg', story)
+    if tangram.height < tangram.width:
+        tangram.rotate(-90)
+    add_hint(tangram, story)
 
 
-def add_hint(hint: Tangram, hint_path: Path, story: list[Flowable]):
+def add_hint(hint: Tangram,
+             story: list[Flowable],
+             skip_page_break: bool = False):
     left, bottom, right, top = hint.bounds
     hint.translate(-left - (right-left)/2, -bottom - (top-bottom)/2)
     # if (right - left) > pagesizes.letter[1]:
@@ -724,12 +716,11 @@ def add_hint(hint: Tangram, hint_path: Path, story: list[Flowable]):
     drawing = svgwrite.Drawing(size=(right-left, top-bottom))
     hint.draw(drawing)
     svg_text = drawing.tostring()
-    hint_path.write_text(svg_text)
 
     svg_bytes = svg_text.encode()
     pdf_drawing = svg2rlg(BytesIO(svg_bytes))
     assert pdf_drawing is not None
-    if story:
+    if story and not skip_page_break:
         story.append(PageBreak())
     story.append(pdf_drawing)
 

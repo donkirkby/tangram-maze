@@ -3,7 +3,7 @@ import typing
 from collections import defaultdict
 
 import shapely
-from shapely import Point, Geometry
+from shapely import Point, Geometry, Polygon
 
 from tan import Tan
 
@@ -50,6 +50,7 @@ class TanGroup(Tan):
         if components is None:
             components = [combined]
         for component in components:
+            assert isinstance(component, Polygon)
             vertex_rings: dict[int, list] = defaultdict(list)
             exterior_points = [Point(c) for c in component.exterior.coords]
             for ring in component.interiors:

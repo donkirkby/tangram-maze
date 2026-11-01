@@ -61,13 +61,18 @@ def test_rotate(image_differ: LiveImageDiffer):
 
     actual = svgwrite.Drawing(size=(200, 200))
 
-    t1 = Tan((100, 0), (0, 100))
+    t1 = Tan((100, 0), (0, 100), direction=-135)
+
+    assert t1.direction == 225
+
     t1.rotate(90)
     t1.draw(actual)
 
     svg1 = LiveSvg(actual.tostring())
     svg2 = LiveSvg(expected.tostring())
     image_differ.assert_equal(svg1, svg2)
+
+    assert t1.direction == 315
 
 
 def test_rotate_anchor_point(image_differ: LiveImageDiffer):
@@ -116,6 +121,25 @@ def test_flip(image_differ: LiveImageDiffer):
     svg1 = LiveSvg(actual.tostring())
     svg2 = LiveSvg(expected.tostring())
     image_differ.assert_equal(svg1, svg2)
+
+
+def test_flip_direction(image_differ: LiveImageDiffer):
+    expected = svgwrite.Drawing(size=(200, 200))
+    expected.add(expected.polygon([(100, 200), (100, 100), (200, 100)],
+                                  fill='black'))
+
+    actual = svgwrite.Drawing(size=(200, 200))
+
+    t1 = Tan((100, 0), (0, 100), direction=-135)
+
+    t1.flip()
+    t1.draw(actual)
+
+    svg1 = LiveSvg(actual.tostring())
+    svg2 = LiveSvg(expected.tostring())
+    image_differ.assert_equal(svg1, svg2)
+
+    assert t1.direction == 135
 
 
 # noinspection DuplicatedCode

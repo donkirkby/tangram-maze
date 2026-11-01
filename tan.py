@@ -6,9 +6,11 @@ class Tan:
     def __init__(self,
                  *points,
                  copy: Tan | None = None,
-                 display: Tan | None = None):
+                 display: Tan | None = None,
+                 direction: float | None = None):
         if copy is not None:
             self.points = copy.points
+            self.direction = copy.direction
             if copy.display is None:
                 self.display = None
             else:
@@ -16,6 +18,7 @@ class Tan:
         else:
             self.points = ((0, 0), ) + points
             self.display = None
+            self.direction = direction and direction % 360
         if display is not None:
             self.display = display
         self.anchor_point = (0, 0)
@@ -68,6 +71,8 @@ class Tan:
         self.points = tuple((x+cx, y+cy) for x, y in rotated_points)
         if self.display:
             self.display.rotate(angle, anchor_point)
+        if self.direction is not None:
+            self.direction = (self.direction + angle) % 360
 
     def scale(self, scale):
         self.points = tuple((scale*x, scale*y) for x, y in self.points)
@@ -78,6 +83,8 @@ class Tan:
         self.points = tuple((x, -y) for x, y in self.points)
         if self.display:
             self.display.flip()
+        if self.direction is not None:
+            self.direction = -self.direction % 360
 
     def anchor(self, target: 'Tan', target_point=0, moving_point=0):
         new_x, new_y = target.points[target_point]
