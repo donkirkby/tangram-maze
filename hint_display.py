@@ -7,9 +7,9 @@ from tangram import Tangram
 class HintDisplay:
     def __init__(self,
                  tangram: Tangram,
+                 solution: int,
                  hint1: int,
                  hint2: int,
-                 solution: int,
                  scale: float = 372):
         self.tangram = tangram
         self.scale = scale

@@ -46,7 +46,7 @@ def test_draw(image_differ: LiveImageDiffer):
     tangram2 = Tangram(scale=1)
     create_square(tangram2)
     tangram2.translate(10, 20)  # Force it to centre on the page.
-    display = HintDisplay(tangram2, hint1=108, hint2=12, solution=99, scale=100)
+    display = HintDisplay(tangram2, solution=99, hint1=108, hint2=12, scale=100)
     actual = svgwrite.Drawing(size=(display.width, display.height))
     display.draw(actual)
 
@@ -82,7 +82,7 @@ def test_landscape(image_differ: LiveImageDiffer):
     create_square(tangram2)
     tangram2.t4a.translate(tangram2.width, 0)
     tangram2.translate(-30, -20)  # Force it to centre on the page.
-    display = HintDisplay(tangram2, hint1=108, hint2=12, solution=99, scale=100)
+    display = HintDisplay(tangram2, solution=99, hint1=108, hint2=12, scale=100)
     actual = svgwrite.Drawing(size=(display.width, display.height))
     display.draw(actual)
 

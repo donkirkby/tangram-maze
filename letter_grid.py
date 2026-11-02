@@ -18,10 +18,8 @@ from svgwrite import Drawing
 
 from font_set import register_fonts
 from hint_display import HintDisplay
-from live_pdf import LivePdf
-from maze import layout_empty, layout_fat_axe, layout_saw, layout_thin_axe, \
-    layout_tug, layout_ship, layout_top
 from tangram import Tangram
+from test_tan import LiveSvg
 
 
 @dataclass
@@ -64,7 +62,7 @@ class LetterGrid:
                                                  stroke='black',
                                                  stroke_width=stroke_width))
                 drawing.add(drawing.circle((scaled_x, scaled_y),
-                                           self.scale_factor / 2,
+                                           self.scale_factor * 0.6,
                                            stroke='black',
                                            stroke_width=stroke_width,
                                            fill='white'))
@@ -78,17 +76,245 @@ class LetterGrid:
                     font_size = round(0.3*self.scale_factor)
                 drawing.add(drawing.text(label,
                                          (scaled_x,
-                                          round(scaled_y-0.2*self.scale_factor)),
+                                          round(scaled_y-0.3*self.scale_factor)),
                                          font_family='FredokaOne',
                                          font_size=font_size,
                                          text_anchor='middle'))
                 layout_function = self.layout_functions[cell_index]
                 tangram = Tangram()
-                tangram.scale(0.3*self.scale_factor)
+                tangram.scale(0.37*self.scale_factor)
                 layout_function(tangram)
                 tangram.centre_on(round(scaled_x - x0),
                                   round(y0 - scaled_y - 0.12*self.scale_factor))
                 tangram.draw(drawing)
+
+
+def layout_empty(tangram: Tangram):
+    tangram.translate(0, 0)
+
+
+def layout_tug(tangram: Tangram):
+    tangram.add(tangram.t4a)
+    tangram.t4a.rotate(-90)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.t4a, 1, 1)
+    tangram.add(tangram.t4b)
+    tangram.t4b.rotate(90)
+    tangram.t4b.anchor(tangram.s)
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(45)
+    tangram.t2.anchor(tangram.t4b, 2)
+    tangram.add(tangram.t1a)
+    tangram.t1a.rotate(-90)
+    tangram.t1a.anchor(tangram.t4b, 1, 2)
+    tangram.add(tangram.p)
+    tangram.p.rotate(45)
+    tangram.p.anchor(tangram.t4b, 1)
+    tangram.add(tangram.t1b)
+    tangram.t1b.rotate(-135)
+    tangram.t1b.anchor(tangram.p, 1)
+
+
+def layout_thin_axe(tangram: Tangram):
+    tangram.add(tangram.s)
+    tangram.add(tangram.t1a)
+    tangram.t1a.anchor(tangram.s, 3)
+    tangram.add(tangram.p)
+    tangram.p.flip()
+    tangram.p.rotate(-90)
+    tangram.p.anchor(tangram.t1a, 1, 1)
+    tangram.add(tangram.t1b)
+    tangram.t1b.rotate(180)
+    tangram.t1b.anchor(tangram.p, 0, 2)
+    tangram.add(tangram.t4a)
+    tangram.t4a.rotate(-135)
+    tangram.t4a.anchor(tangram.t1b, 1, 0)
+    tangram.t4a.translate(0, tangram.t4a.height)
+    tangram.add(tangram.t4b)
+    tangram.t4b.rotate(45)
+    tangram.t4b.anchor(tangram.t4a, 2)
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(90)
+    tangram.t2.anchor(tangram.t4b, 0, 2)
+    tangram.flip()
+    tangram.rotate(180)
+
+
+def layout_saw(tangram: Tangram):
+    tangram.add(tangram.t4a)
+    tangram.t4a.rotate(90)
+    tangram.add(tangram.t4b)
+    tangram.t4b.rotate(90)
+    tangram.t4b.anchor(tangram.t4a, 0, 1)
+    tangram.add(tangram.p)
+    tangram.p.flip()
+    tangram.p.anchor(tangram.t4a, 0, 1)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.t4b, 0, 2)
+    tangram.add(tangram.t1a)
+    tangram.t1a.rotate(90)
+    tangram.t1a.anchor(tangram.s)
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(-135)
+    tangram.t2.anchor(tangram.s)
+    tangram.add(tangram.t1b)
+    tangram.t1b.rotate(180)
+    tangram.t1b.anchor(tangram.s, 1)
+    tangram.rotate(270)
+
+
+def layout_top(tangram: Tangram):
+    tangram.add(tangram.t4a)
+    tangram.t4a.rotate(-90)
+    tangram.add(tangram.t4b)
+    tangram.t4b.rotate(180)
+    tangram.add(tangram.p)
+    tangram.p.anchor(tangram.t4a, 2, 1)
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(-135)
+    tangram.t2.anchor(tangram.p, 3, 0)
+    tangram.add(tangram.t1a)
+    tangram.t1a.rotate(90)
+    tangram.t1a.anchor(tangram.t2, 1)
+    tangram.add(tangram.t1b)
+    tangram.t1b.rotate(-90)
+    tangram.t1b.anchor(tangram.t2, 0, 2)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.t1b, 0, 0)
+    tangram.s.translate(tangram.s.width / 2, 0)
+
+
+def layout_fat_axe(tangram: Tangram):
+    tangram.add(tangram.t4a)
+    tangram.add(tangram.t4b)
+    tangram.t4b.rotate(180)
+    tangram.t4b.anchor(tangram.t4a, 2, 1)
+    tangram.add(tangram.p)
+    tangram.p.rotate(90)
+    tangram.p.anchor(tangram.t4a, 2, 1)
+    tangram.add(tangram.t1a)
+    tangram.t1a.rotate(90)
+    tangram.t1a.anchor(tangram.p, 2, 1)
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(-45)
+    tangram.t2.anchor(tangram.p, 3, 0)
+    tangram.add(tangram.t1b)
+    tangram.t1b.anchor(tangram.t2, 0, 2)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.t1b, 0, 3)
+    tangram.flip()
+    tangram.rotate(180)
+
+
+def layout_wrench(tangram: Tangram):
+    tangram.add(tangram.t1a)
+    tangram.add(tangram.t2)
+    tangram.t2.anchor(tangram.t1a, 1)
+    tangram.t2.rotate(45)
+    tangram.add(tangram.t4a)
+    tangram.t4a.anchor(tangram.t2, 1)
+    tangram.t4a.rotate(90)
+    tangram.add(tangram.t4b)
+    tangram.t4b.anchor(tangram.t4a)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.t4b, 2)
+    tangram.s.rotate(-45)
+    tangram.add(tangram.t1b)
+    tangram.t1b.anchor(tangram.s, 3, 1)
+    tangram.t1b.rotate(180)
+    tangram.add(tangram.p)
+    tangram.p.flip()
+    tangram.p.anchor(tangram.t1b, 0, 3)
+    tangram.p.rotate(-90)
+
+
+def layout_arrow(tangram: Tangram):
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(45)
+    tangram.add(tangram.t4a)
+    tangram.t4a.anchor(tangram.t2, 2)
+    tangram.add(tangram.t4b)
+    tangram.t4b.anchor(tangram.t4a, 1, 2)
+    tangram.t4b.rotate(180)
+    tangram.add(tangram.p)
+    tangram.p.anchor(tangram.t4b, 1)
+    tangram.add(tangram.t1a)
+    tangram.t1a.anchor(tangram.p, 2, 1)
+    tangram.t1a.rotate(180)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.t1a, 2)
+    tangram.add(tangram.t1b)
+    tangram.t1b.anchor(tangram.s, 2)
+    tangram.t1b.rotate(-90)
+
+
+def layout_carrier(tangram: Tangram):
+    tangram.add(tangram.t4a)
+    tangram.add(tangram.t1a)
+    tangram.t1a.anchor(tangram.t4a, 2, 2)
+    tangram.t1a.rotate(45)
+    tangram.add(tangram.t4b)
+    tangram.t4b.anchor(tangram.t4a, 2)
+    tangram.add(tangram.t2)
+    tangram.t2.anchor(tangram.t4a, 2, 1)
+    tangram.t2.rotate(-45)
+    tangram.add(tangram.t1b)
+    tangram.t1b.anchor(tangram.t4b, 1, 1)
+    tangram.t1b.rotate(180)
+    l = tangram.t1b.height * 0.5
+    tangram.t1b.translate(-l, l)
+    tangram.add(tangram.p)
+    tangram.p.anchor(tangram.t1b, 0, 1)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.p, 2)
+    tangram.s.rotate(45)
+    l = 0.3*tangram.s.width
+    tangram.s.translate(l, -l)
+
+
+def layout_ship(tangram: Tangram):
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(-45)
+    tangram.add(tangram.t4a)
+    tangram.t4a.rotate(-225)
+    tangram.t4a.anchor(tangram.t2, 0, 1)
+    tangram.add(tangram.t4b)
+    tangram.t4b.rotate(90)
+    tangram.t4b.anchor(tangram.t4a, 2, 0)
+    tangram.add(tangram.s)
+    tangram.s.rotate(45)
+    tangram.s.anchor(tangram.t4a, 0, 2)
+    tangram.add(tangram.t1a)
+    tangram.t1a.rotate(-135)
+    tangram.t1a.anchor(tangram.t4b, 0, 1)
+    tangram.add(tangram.p)
+    tangram.p.rotate(45)
+    tangram.p.anchor(tangram.s, 0, 0)
+    tangram.p.translate(0, -tangram.p.height)
+    tangram.add(tangram.t1b)
+    tangram.t1b.rotate(45)
+    tangram.t1b.anchor(tangram.p, 2, 1)
+
+
+def layout_pipe(tangram: Tangram):
+    tangram.add(tangram.s)
+    tangram.add(tangram.t1a)
+    tangram.t1a.anchor(tangram.s, 1)
+    tangram.add(tangram.t1b)
+    tangram.t1b.anchor(tangram.t1a, 1)
+    tangram.t1b.rotate(180)
+    tangram.add(tangram.p)
+    tangram.p.flip()
+    tangram.p.anchor(tangram.t1b, 0, 3)
+    tangram.p.rotate(-90)
+    tangram.add(tangram.t4a)
+    tangram.t4a.anchor(tangram.p, 1)
+    tangram.add(tangram.t4b)
+    tangram.t4b.anchor(tangram.t4a, 1, 2)
+    tangram.t4b.rotate(180)
+    tangram.add(tangram.t2)
+    tangram.t2.anchor(tangram.t4a, 1, 1)
+    tangram.t2.rotate(45)
 
 
 def layout_square(tangram: Tangram):
@@ -167,6 +393,58 @@ def layout_long_jump(tangram: Tangram):
     tangram.t1b.translate(0, 0.4*tangram.t1b.height)
 
 
+def layout_skater(tangram: Tangram):
+    tangram.add(tangram.t4a)
+    tangram.t4a.rotate(45)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.t4a, 2)
+    tangram.s.rotate(10)
+    tangram.s.translate(tangram.t4a.width*0.4, 0)
+    tangram.add(tangram.t4b)
+    tangram.t4b.rotate(-135)
+    l = tangram.t4a.height/2
+    tangram.t4b.translate(-l, l)
+    tangram.add(tangram.t2)
+    tangram.t2.anchor(tangram.t4b, 2)
+    tangram.t2.rotate(180)
+    tangram.add(tangram.t1a)
+    tangram.t1a.anchor(tangram.t2, 2, 2)
+    l = tangram.t1a.height * 0.4
+    tangram.t1a.translate(-l, l)
+    tangram.add(tangram.p)
+    tangram.p.flip()
+    tangram.p.anchor(tangram.t2, 1, 3)
+    tangram.p.rotate(180)
+    tangram.p.translate(-tangram.p.width*0.1, 0)
+    tangram.add(tangram.t1b)
+    tangram.t1b.anchor(tangram.p, 1, 2)
+    tangram.t1b.rotate(-90)
+    l = tangram.t1b.height * 0.4
+    tangram.t1b.translate(l, l)
+
+
+def layout_silo(tangram: Tangram):
+    tangram.add(tangram.s)
+    tangram.add(tangram.t4a)
+    tangram.t4a.anchor(tangram.s, 2, 2)
+    tangram.t4a.rotate(-135)
+    tangram.add(tangram.t1a)
+    tangram.t1a.anchor(tangram.t4a, 1, 1)
+    tangram.t1a.rotate(180)
+    tangram.add(tangram.t4b)
+    tangram.t4b.anchor(tangram.t1a, 2, 1)
+    tangram.add(tangram.p)
+    tangram.p.flip()
+    tangram.p.anchor(tangram.t4b, 2)
+    tangram.p.rotate(90)
+    tangram.add(tangram.t2)
+    tangram.t2.anchor(tangram.p, 1)
+    tangram.t2.rotate(-45)
+    tangram.add(tangram.t1b)
+    tangram.t1b.anchor(tangram.t2, 0, 1)
+    tangram.t1b.rotate(-90)
+
+
 def layout_laundry(tangram: Tangram):
     tangram.add(tangram.t4a)
     tangram.add(tangram.t4b)
@@ -185,6 +463,30 @@ def layout_laundry(tangram: Tangram):
     tangram.add(tangram.t1b)
     tangram.t1b.rotate(90)
     tangram.t1b.anchor(tangram.t2, 2)
+
+
+def layout_factory(tangram: Tangram):
+    tangram.add(tangram.t2)
+    tangram.t2.rotate(90)
+    tangram.add(tangram.t4a)
+    tangram.t4a.rotate(45)
+    tangram.t4a.anchor(tangram.t2, 1, 1)
+    tangram.add(tangram.t1a)
+    tangram.t1a.anchor(tangram.t4a, 1, 2)
+    tangram.t1a.rotate(-135)
+    tangram.add(tangram.t4b)
+    tangram.t4b.anchor(tangram.t4a, 0, 1)
+    tangram.add(tangram.p)
+    tangram.p.flip()
+    tangram.p.anchor(tangram.t4a, 2)
+    tangram.p.rotate(135)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.p, 1)
+    tangram.s.translate((tangram.t1a.width - tangram.s.width)/2, 0)
+    tangram.add(tangram.t1b)
+    tangram.t1b.anchor(tangram.p, 1, 1)
+    tangram.t1b.rotate(-135)
+    tangram.t1b.translate(0, tangram.s.height)
 
 
 def layout_giraffe(tangram: Tangram):
@@ -342,18 +644,26 @@ def build_direction_data(paragraph_style) -> DirectionSet:
 
 def add_hint_display(layout_function: typing.Callable[..., None],
                      story: list[Flowable],
-                     hint1: int = 0,
-                     hint2: int = 0,
-                     solution: int = 0) -> None:
+                     directions: dict[str, list[int]],
+                     solution: str = '',
+                     hint1: str = '',
+                     hint2: str = '') -> None:
     if story:
         story.append(PageBreak())
 
     scale = 372
-    # scale = 17
     tangram = Tangram(1)
     layout_function(tangram)
 
-    display = HintDisplay(tangram, hint1, hint2, solution, scale=scale)
+    hint1_number = directions[hint1].pop()
+    hint2_number = directions[hint2].pop()
+    solution_number = directions[solution].pop()
+
+    display = HintDisplay(tangram,
+                          solution_number,
+                          hint1_number,
+                          hint2_number,
+                          scale)
 
     add_hint(display, story)
 
@@ -417,12 +727,14 @@ def write_hint_files():
 
     story.append(Paragraph('Hints', style=heading_style))
     hint_texts = dedent('''\
-        Before you get too frustrated with a tangram, this booklet will give you
-        some hints. There are three hints for each tangram and a solution. The
-        first two hints for each tangram tell you the direction that the right
-        angle corner of the two largest triangles point. Look at the number for
-        a hint, then look up that number in the big table on the next page to
-        see which direction the triangle points.
+        This is how your puzzle quest starts.
+        
+        But before you get too frustrated with a tangram, this booklet can give
+        you some hints. There are three hints for each tangram and a solution.
+        The first two hints for each tangram tell you the direction that the
+        right angle corner of the two largest triangles point. Look at the
+        number for a hint, then look up that number in the big table on page 2
+        to see which direction the triangle points.
         
         If you've looked up the hints for both large triangles and you still
         can't solve the tangram, you can turn to the next page. It has a
@@ -431,8 +743,8 @@ def write_hint_files():
         
         If you're still stuck, there's a solution number that works the same way
         as the first two hints, but tells you the direction of the medium
-        triangle. Once you've looked that up, you can try to solve the tangram,
-        or just follow the line in that direction to the next letter.
+        triangle. Once you've looked that up, you can try again to finish the
+        tangram, or just follow the line in that direction to the next letter.
         
         For example, if the diagram below were the solution, then the hint
         directions would be E and S, and the solution direction would be SE.
@@ -440,25 +752,40 @@ def write_hint_files():
     for hint_text in hint_texts:
         story.append(Paragraph(hint_text, style=paragraph_style))
 
-    story.append(Spacer(1, 0.5*inch))
+    story.append(Spacer(1, 0.25*inch))
     square = Tangram(scale=372, gap=3)
     layout_square(square)
     add_tangram(square, story)
 
     direction_set = build_direction_data(paragraph_style)
+
+    hint1_number = direction_set.directions['NE'].pop()
+    hint2_number = direction_set.directions['SW'].pop()
+    story.append(Spacer(1, 0.25*inch))
+    story.append(Paragraph(
+        f'The hints for the start puzzle are {hint1_number} and'
+        f' {hint2_number}.',
+        style=paragraph_style))
+
     story.append(PageBreak())
     story.append(Table(direction_set.table_rows))
 
-    add_hint_display(layout_goat, story)
-    add_hint_display(layout_long_jump, story)
-    add_hint_display(layout_saw, story)
-    add_hint_display(layout_llama, story)
-    add_hint_display(layout_thin_axe, story)
-    add_hint_display(layout_tug, story)
-    add_hint_display(layout_laundry, story)
-    add_hint_display(layout_giraffe, story)
-    add_hint_display(layout_vulture, story)
-    add_hint_display(layout_kangaroo, story)
+    directions = direction_set.directions
+    e = 'E'
+    ne = 'NE'
+    n = 'N'
+    nw = 'NW'
+    w = 'W'
+    sw = 'SW'
+    s = 'S'
+    se = 'SE'
+    add_hint_display(layout_pipe, story, directions, s, s, n)
+    add_hint_display(layout_skater, story, directions, ne, sw, s)
+    add_hint_display(layout_factory, story, directions, se, n, sw)
+    add_hint_display(layout_silo, story, directions, w, sw, se)
+    add_hint_display(layout_wrench, story, directions, s, sw, sw)
+    add_hint_display(layout_carrier, story, directions, w, ne, sw)
+    add_hint_display(layout_arrow, story, directions, s, nw, e)
 
     doc.build(story)
 
@@ -467,52 +794,58 @@ def main():
     image_path = Path(__file__).with_name('letter_grid.svg')
     write_hint_files()
 
-    if __name__ == '__live_coding__':
-        live_pdf = LivePdf(image_path.with_name('hints') / 'hints.pdf', 2)
-        live_pdf.display((0, 150))
-        live_pdf = LivePdf(image_path.with_name('hints') / 'hints.pdf', 3)
-        live_pdf.display((0, -100))
-        return
+    # if __name__ == '__live_coding__':
+    #     live_pdf = LivePdf(image_path.with_name('hints') / 'hints.pdf', 2)
+    #     live_pdf.display((0, 150))
+    #     live_pdf = LivePdf(image_path.with_name('hints') / 'hints.pdf', 3)
+    #     live_pdf.display((0, -100))
+    #     return
 
-    letter_grid = LetterGrid(5, 5)
+    letter_grid = LetterGrid(5, 6)
     letter_grid.scale(100)
 
-    letter_grid.add('A', layout_ship)
-    letter_grid.add('P', layout_long_jump)
+    letter_grid.add('R', layout_ship)
+    letter_grid.add('C', layout_long_jump)
     letter_grid.add('R', layout_saw)
-    letter_grid.add('E', layout_llama)
-    letter_grid.add('D', layout_thin_axe)
+    letter_grid.add('P', layout_llama)
+    letter_grid.add('L', layout_thin_axe)
 
-    letter_grid.add('S', layout_top)
-    letter_grid.add('I', layout_giraffe)
-    letter_grid.add('start', layout_goat)
-    letter_grid.add('A', layout_tug)
-    letter_grid.add('E', layout_vulture)
+    letter_grid.add('M', layout_goat)
+    letter_grid.add('O', layout_giraffe)
+    letter_grid.add('start', layout_pipe)
+    letter_grid.add('E', layout_factory)
+    letter_grid.add('X', layout_tug)
 
-    letter_grid.add('M', layout_kangaroo)
-    letter_grid.add('N', layout_llama)
-    letter_grid.add('O', layout_long_jump)
-    letter_grid.add('T', layout_laundry)
-    letter_grid.add('I', layout_giraffe)
+    letter_grid.add('N', layout_kangaroo)
+    letter_grid.add('M', layout_laundry)
+    letter_grid.add('B', layout_skater)
+    letter_grid.add('I', layout_wrench)
+    letter_grid.add('G', layout_silo)
+
+    letter_grid.add('C', layout_ship)
+    letter_grid.add('E', layout_fat_axe)
+    letter_grid.add('S', layout_arrow)
+    letter_grid.add('N', layout_carrier)
+    letter_grid.add('L', layout_top)
 
     letter_grid.add('I', layout_vulture)
-    letter_grid.add('R', layout_top)
+    letter_grid.add('O', layout_top)
     letter_grid.add('end', layout_empty)
-    letter_grid.add('O', layout_vulture)
-    letter_grid.add('Y', layout_thin_axe)
+    letter_grid.add('R', layout_vulture)
+    letter_grid.add('A', layout_thin_axe)
 
-    letter_grid.add('W', layout_ship)
-    letter_grid.add('C', layout_fat_axe)
-    letter_grid.add('N', layout_kangaroo)
-    letter_grid.add('R', layout_ship)
-    letter_grid.add('S', layout_top)
+    letter_grid.add('R', layout_pipe)
+    letter_grid.add('N', layout_factory)
+    letter_grid.add('G', layout_skater)
+    letter_grid.add('D', layout_wrench)
+    letter_grid.add('I', layout_silo)
 
     width = 1000
-    height = 1000
+    height = 1200
     drawing = Drawing(size=(width, height))
     letter_grid.draw(drawing)
     if __name__ == '__live_coding__':
-        # LiveSvg(drawing.tostring()).display((-width*0.35, height*0.4))
+        LiveSvg(drawing.tostring()).display((-width*0.35, height*0.4))
         pass
     else:
         image_path.write_text(drawing.tostring())
