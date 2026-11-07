@@ -1,6 +1,8 @@
 from textwrap import dedent
 
-from grid_finder import WordGridGenerator, WordGrid
+import pytest
+
+from grid_finder import WordGridGenerator, WordGrid, FoundWord
 
 
 def test_generate_random():
@@ -38,34 +40,93 @@ def test_repr():
     assert repr(grid) == r"WordGrid('AAAAA\nBBsBB\nCCCCC\nDDDfD\nEEEEE')"
 
 
+def test_bad_solution():
+    word_list = [FoundWord(word, len(word))
+                 for word in 'A BA BAD BAN BAND AD AND WAX BANANA'.split()]
+    with pytest.raises(ValueError, match=r"Solution 'BRN' not found in word_list\."):
+        WordGridGenerator(2,
+                          3,
+                          (1, 0),
+                          (1, 2),
+                          'BRN',
+                          word_list)
+
+
 def test_count_words():
     grid = WordGrid(dedent("""\
         Bs
         AD
         Nf
         """))
+    word_list = [FoundWord(word, len(word))
+                 for word in 'A BA BAD BAN BAND AD AND WAX BANANA'.split()]
     generator = WordGridGenerator(2,
                                   3,
                                   (1, 0),
                                   (1, 2),
                                   'BAN',
-                                  [
-                                      ('A', 1),
-                                      ('BA', 1),
-                                      ('BAD', 1),
-                                      ('BAN', 1),
-                                      ('BAND', 1),
-                                      ('AD', 1),
-                                      ('AND', 1),
-                                      ('WAX', 1),
-                                      ('BANANA', 1)
-                                   ])
+                                  word_list)
 
     found_words = generator.find_words(grid)
-    stripped_words = {word for word, weight, path in found_words}
-    assert stripped_words == {'A', 'BA', 'BAD', 'BAN', 'BAND', 'AD', 'AND'}
+    word_scores = {word.word: word.score for word in found_words}
+    assert word_scores == {'A': 1,
+                           'BA': 2 + 200,  # Common prefix
+                           'BAD': 3 + 200,
+                           'BAN': 3 + 10_000 + 40,  # Solution + used squares
+                           'BAND': 4 + 300,
+                           'AD': 2,
+                           'AND': 3}
 
     score = generator.calculate_score(grid)
-    assert score == (10_000 +  # solution found
-                     7*100 +  # common prefix lengths
-                     7)  # sum of weights
+    assert score == sum(word_scores.values())
+
+
+def test_partial_solution():
+    grid = WordGrid(dedent("""\
+        BsH
+        AIN
+        NfK
+        """))
+    word_list = [FoundWord(word, len(word)/10)
+                 for word in 'A BA BAD BAN BAND BANK AD AN INK AND WAX BANANA'.split()]
+    generator = WordGridGenerator(3,
+                                  3,
+                                  (1, 0),
+                                  (1, 2),
+                                  'BANK',
+                                  word_list)
+
+    found_words = generator.find_words(grid)
+    word_scores = {word.word: word.score for word in found_words}
+    assert word_scores == {'A': 0.1,
+                           'AN': 0.2,
+                           'BA': 2.2,
+                           'BAN': 3.3,  # Common start
+                           'INK': 2.3}  # Common end
+
+
+def test_count_words_duplicates():
+    grid = WordGrid(dedent("""\
+        BsC
+        ADB
+        NfA
+        """))
+    word_list = [FoundWord(word, len(word))
+                 for word in 'BA BAN'.split()]
+    generator = WordGridGenerator(3,
+                                  3,
+                                  (1, 0),
+                                  (1, 2),
+                                  'BAN',
+                                  word_list)
+
+    found_words = generator.find_words(grid)
+    word_list = sorted(word.word for word in found_words)
+    assert word_list == ['BA', 'BAN']
+
+    word_scores = {word.word: word.score for word in found_words}
+    assert word_scores == {'BA': 2 + 200,  # Common prefix
+                           'BAN': 3 + 10_000 + 50}  # Solution + used squares
+
+    score = generator.calculate_score(grid)
+    assert score == sum(word_scores.values())

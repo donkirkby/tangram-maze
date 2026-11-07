@@ -1,15 +1,27 @@
+import csv
 import os.path
 import re
 import string
+from dataclasses import dataclass, replace
 from functools import cache
+from operator import attrgetter, itemgetter
+from os.path import commonprefix
 from pathlib import Path
 from random import choice, randrange
 
 import math
+from textwrap import dedent
 
 from networkx import grid_2d_graph, all_simple_paths
 
 from evo import Individual, IndividualGenerator, Population
+
+
+@dataclass
+class FoundWord:
+    word: str
+    score: float
+    path: str | None = None
 
 
 class WordGrid(Individual):
@@ -62,7 +74,8 @@ class WordGridGenerator(IndividualGenerator[WordGrid]):
                  start_pos: tuple[int, int],
                  finish_pos: tuple[int, int],
                  solution: str = '',
-                 word_list: list[tuple[str, int]] | None = None):
+                 word_list: list[FoundWord] | None = None,
+                 is_logging: bool = False):
         """ Initialize a WordGridGenerator object.
 
         :param width: The number of letters in each row.
@@ -76,6 +89,7 @@ class WordGridGenerator(IndividualGenerator[WordGrid]):
         :param word_list: The list of words to search for in the grid, as well
         as a weight for each word. More common words should have higher weight.
         If it's None, then you can't calculate scores.
+        :param is_logging: True if it should log scoring details.
         """
         super().__init__()
         if not 0 < width <= 16:
@@ -88,13 +102,14 @@ class WordGridGenerator(IndividualGenerator[WordGrid]):
         self.finish_pos = finish_pos
         self.solution = solution
         if word_list is not None:
-            self.word_weights = {word: weight
-                                 for word, weight in word_list}
-            self.max_length = max(len(word)
-                                  for word, weight in self.word_weights.items())
+            self.word_map = {word.word: word for word in word_list}
+            self.max_length = max(len(word.word) for word in word_list)
         else:
-            self.word_weights = {}
+            self.word_map = {}
             self.max_length = 9
+        self.is_logging = is_logging
+        if solution and solution not in self.word_map:
+            raise ValueError(f'Solution {solution!r} not found in word_list.')
 
     def generate_random(self) -> WordGrid:
         rows = [[choice(string.ascii_uppercase) for _ in range(self.width)]
@@ -105,24 +120,9 @@ class WordGridGenerator(IndividualGenerator[WordGrid]):
 
     def calculate_score(self, individual: WordGrid) -> float:
         all_words = self.find_words(individual)
-        word_paths = list[str]()
-        solution_path = ''
-        score = 0
-        for word, weight, path in all_words:
-            score += weight
-            if word == self.solution:
-                score += 10_000
-                solution_path = path
-            else:
-                word_paths.append(path)
-        if solution_path:
-            for word_path in word_paths:
-                overlap = len(os.path.commonprefix((word_path,
-                                                    solution_path))) // 2
-                score += 100 * overlap
-        return score
+        return sum(word.score for word in all_words)
 
-    def find_words(self, grid: WordGrid) -> set[tuple[str, int, str]]:
+    def find_words(self, grid: WordGrid) -> list[FoundWord]:
         """ Search for words in the grid.
 
         :return: [(word, weight, path)] where the path is a string of positions,
@@ -133,16 +133,73 @@ class WordGridGenerator(IndividualGenerator[WordGrid]):
                                self.start_pos,
                                self.finish_pos,
                                self.max_length)
-        found_words = set[tuple[str, int, str]]()
+        found_words = list[FoundWord]()
+        used_squares = set[str]()
         for path in paths:
             rows = grid.rows
             letters = [rows[y][x] for x, y in path]
             word = ''.join(letters)
-            word_weight = self.word_weights.get(word)
-            if word_weight:
-                path_text = ''.join(f'{x:x}{y:x}' for x, y in path)
-                found_words.add((word, word_weight, path_text))
-        return found_words
+            word_info: FoundWord | None = self.word_map.get(word)
+            if word_info:
+                word_squares = [f'{x:x}{y:x}' for x, y in path]
+                used_squares.update(word_squares)
+                path_text = ''.join(word_squares)
+                new_info = replace(word_info, path=path_text)
+                found_words.append(new_info)
+        solution = self.solution
+        found_solution: FoundWord | None = None
+        for word in found_words:
+            word_path = word.path
+            assert word_path is not None
+            if word.word == solution:
+                found_solution = word
+        if found_solution is not None:
+            found_solution.score += 10_000 + 10 * len(used_squares)
+            if self.is_logging:
+                all_squares = {f'{x:x}{y:x}'
+                               for x in range(self.width)
+                               for y in range(self.height)}
+                unused_squares = all_squares - used_squares
+                unused_squares.discard(f'{self.start_pos[0]}{self.start_pos[1]}')
+                unused_squares.discard(f'{self.finish_pos[0]}{self.finish_pos[1]}')
+                print(f'Used squares: {len(used_squares)}')
+                print(f'Unused squares: {sorted(unused_squares)}')
+
+            solution_path = found_solution.path
+            assert solution_path is not None
+            for word in found_words:
+                if word is found_solution:
+                    continue
+                word_path = word.path
+                assert word_path is not None
+                overlap = len(os.path.commonprefix((word_path,
+                                                    solution_path))) // 2
+                word.score += 100 * overlap
+        else:
+            for word in found_words:
+                word_length = len(word.word)
+                for i in range(word_length, word_length//2, -1):
+                    word_start = word.word[:i]
+                    if solution.startswith(word_start):
+                        word.score += len(word_start)
+                        break
+                    word_end = word.word[-i:]
+                    if solution.endswith(word_end):
+                        word.score += len(word_end)
+                        break
+        word_infos = dict[str, FoundWord]()
+        for word_info2 in found_words:
+            duplicate = word_infos.get(word_info2.word)
+            if duplicate is not None and duplicate.score >= word_info2.score:
+                continue
+            word_infos[word_info2.word] = word_info2
+
+        result = list(word_infos.values())
+        if self.is_logging:
+            score = sum(word.score for word in result)
+            print(f'Score: {score}')
+
+        return result
 
 
 @cache
@@ -164,10 +221,8 @@ def find_all_paths(width: int,
     return paths
 
 
-def main():
-    max_length = 9
-    path = Path('/etc/dictionaries-common/words')
-    with path.open() as f:
+def load_dictionary(dictionary_path: Path, max_length: int) -> list[FoundWord]:
+    with dictionary_path.open() as f:
         all_words = (word.strip() for word in f)
         length_words = (word.upper()
                         for word in all_words
@@ -175,21 +230,82 @@ def main():
         plain_words = (word
                        for word in length_words
                        if re.match('^[A-Z]+$', word))
-        word_list = [(word, len(word)) for word in plain_words]
+        word_list = [FoundWord(word, len(word)) for word in plain_words]
+    return word_list
+
+
+def load_ngrams(ngrams_path: Path, max_length: int) -> list[FoundWord]:
+    with ngrams_path.open() as f:
+        row_reader = csv.reader(f)
+        next(row_reader)  # skip headers
+        all_words = ((word.strip(), int(lower_count))
+                     for word, lower_count, total_count in row_reader)
+        length_words = ((word.upper(), lower_count)
+                        for word, lower_count in all_words
+                        if len(word) <= max_length)
+        plain_words = [(word, lower_count)
+                       for word, lower_count in length_words
+                       if re.match('^[A-Z]+$', word)]
+        total_count = sum(lower_count for word, lower_count in plain_words)
+        weighted_words = (FoundWord(word, lower_count/total_count)
+                          for word, lower_count in plain_words)
+        common_words = [word
+                        for word in weighted_words
+                        if word.score > 0.000001]
+    return common_words
+
+
+def find_branches(test_solution: str, word_list: list[FoundWord]):
+    # target = 0.000005
+    # r = [word.word for word in word_list if target * 0.99 < word.score < target * 1.01]
+    # n = len(r)
+    min_length = len(test_solution) // 2
+    branches = [(len(commonprefix((test_solution, word.word))), word)
+                for word in word_list
+                if len(commonprefix((test_solution, word.word))) >= min_length]
+    branches.sort(key=itemgetter(0), reverse=True)
+    branch_words = [word.word for length, word in branches]
+    print(branch_words)
+    exit(0)
+
+
+def main():
+    max_length = 9
+    ngrams_path = Path(__file__).parent.parent / 'ludiverbia/src/rawWords.csv'
+    dictionary_path = Path('/etc/dictionaries-common/words')
+    if ngrams_path.exists():
+        word_list = load_ngrams(ngrams_path, max_length)
+    elif dictionary_path.exists():
+        word_list = load_dictionary(dictionary_path, max_length)
+    else:
+        raise FileNotFoundError('No word files found.')
+
+    # find_branches('ABCDE', word_list)
+
     generator = WordGridGenerator(5,
                                   5,
                                   start_pos=(2, 1),
                                   finish_pos=(2, 3),
                                   solution='START',
-                                  word_list=word_list)
+                                  word_list=word_list,
+                                  is_logging=False)
     population = Population(generator,
-                            individual_count=100,
+                            individual_count=500,
                             epoch_limit=100,
                             mutation_rate=0.2,
                             is_logging=True)
     population.run_epochs()
-    print(population.top_individual.display())
-    print(generator.find_words(population.top_individual))
+    top_individual = population.top_individual
+    # DAELA
+    # EKsEK
+    # RSTSI
+    # TAfSH
+    # GERTO
+
+    print(top_individual.display())
+    words = generator.find_words(top_individual)
+    words.sort(key=attrgetter('score'), reverse=True)
+    print([(word.word, word.score) for word in words])
 
 
 if __name__ in ('__main__', '__live_coding__'):

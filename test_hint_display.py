@@ -27,7 +27,7 @@ def create_square(tangram: Tangram) -> None:
 
 # noinspection DuplicatedCode
 def test_draw(image_differ: LiveImageDiffer):
-    expected = svgwrite.Drawing(size=(141, 181))
+    expected = svgwrite.Drawing(size=(141, 171))
     tangram1 = Tangram(scale=100, gap=0)
     create_square(tangram1)
 
@@ -39,7 +39,7 @@ def test_draw(image_differ: LiveImageDiffer):
                                font_size=expected_font_size,
                                text_anchor='end'))
     expected.add(expected.text(f'This Solution: 99, Next Hints: 108, 12',
-                               (0, 181),
+                               (0, 171),
                                font_family='Raleway',
                                font_size=expected_font_size))
 
@@ -56,17 +56,17 @@ def test_draw(image_differ: LiveImageDiffer):
 
 # noinspection DuplicatedCode
 def test_landscape(image_differ: LiveImageDiffer):
-    expected = svgwrite.Drawing(size=(181, 283))
+    expected = svgwrite.Drawing(size=(171, 283))
     tangram1 = Tangram(scale=100)
     create_square(tangram1)
     tangram1.t4a.translate(tangram1.width, 0)
-    tangram1.translate(-20, 51)
+    tangram1.translate(-15, 56)
 
     g = Group()
     expected.add(g)
     tangram1.draw(expected)
     g.add(expected.elements.pop())
-    g['transform'] = 'translate(181, 0) rotate(90)'
+    g['transform'] = 'translate(171, 0) rotate(90)'
     expected_font_size = 10
     g.add(expected.text(f'^N',
                         (283, 10),
@@ -74,7 +74,7 @@ def test_landscape(image_differ: LiveImageDiffer):
                         font_size=expected_font_size,
                         text_anchor='end'))
     g.add(expected.text(f'This Solution: 99, Next Hints: 108, 12',
-                        (0, 181),
+                        (0, 171),
                         font_family='Raleway',
                         font_size=expected_font_size))
 

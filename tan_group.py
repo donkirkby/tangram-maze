@@ -4,6 +4,7 @@ from collections import defaultdict
 
 import shapely
 from shapely import Point, Geometry, Polygon
+from svgwrite.container import Group
 
 from tan import Tan
 
@@ -44,6 +45,8 @@ class TanGroup(Tan):
         if not self.visible_tans:
             return
 
+        g = Group()
+        drawing.add(g)
         fill = self.visible_tans[0].fill
         combined = self.create_polygon(drawing)
         components = getattr(combined, 'geoms', None)
@@ -70,9 +73,9 @@ class TanGroup(Tan):
                     for x2, y2, in ring.coords:
                         steps.append(f'{x2} {y2}')
                     steps.append(f'{point.x} {point.y}')
-            drawing.add(drawing.path(' '.join(steps),
-                                        fill=fill,
-                                        fill_rule='evenodd'))
+            g.add(drawing.path(' '.join(steps),
+                               fill=fill,
+                               fill_rule='evenodd'))
 
     def create_polygon(self,
                        drawing) -> list[tuple[float, float]] | Geometry:

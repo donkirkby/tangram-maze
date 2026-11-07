@@ -465,6 +465,31 @@ def layout_laundry(tangram: Tangram):
     tangram.t1b.anchor(tangram.t2, 2)
 
 
+def layout_lighthouse(tangram: Tangram):
+    tangram.add(tangram.t1a)
+    tangram.t1a.rotate(-135)
+    tangram.add(tangram.t1b)
+    tangram.t1b.anchor(tangram.t1a, 1)
+    tangram.t1b.rotate(-90)
+    tangram.t1b.translate((tangram.t1a.width - tangram.t1b.width)/2, 0)
+    tangram.add(tangram.t4a)
+    tangram.t4a.anchor(tangram.t1b, 2, 1)
+    tangram.t4a.rotate(90)
+    tangram.add(tangram.t2)
+    tangram.t2.anchor(tangram.t4a)
+    tangram.t2.rotate(180)
+    tangram.add(tangram.t4b)
+    tangram.t4b.anchor(tangram.t2, 1, 2)
+    tangram.add(tangram.p)
+    tangram.p.anchor(tangram.t2, 2)
+    tangram.p.rotate(-45)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.p, 1)
+    tangram.flip()
+    tangram.rotate(180)
+
+
+
 def layout_factory(tangram: Tangram):
     tangram.add(tangram.t2)
     tangram.t2.rotate(90)
@@ -590,6 +615,28 @@ def layout_goat(tangram: Tangram):
     tangram.t1b.anchor(tangram.t4b, 0, 2)
     tangram.t1b.rotate(135)
     tangram.t1b.translate(0, -0.5*tangram.t1b.height)
+
+
+def layout_goose(tangram: Tangram):
+    tangram.add(tangram.t4a)
+    tangram.t4a.rotate(45)
+    tangram.add(tangram.t4b)
+    tangram.t4b.anchor(tangram.t4a, 0, 1)
+    tangram.add(tangram.t1a)
+    tangram.t1a.anchor(tangram.t4a)
+    tangram.t1a.rotate(-135)
+    tangram.t1a.translate(-tangram.t4b.width/2, 0)
+    tangram.add(tangram.t1b)
+    tangram.t1b.anchor(tangram.t4b, 0, 2)
+    tangram.t1b.rotate(180)
+    tangram.add(tangram.s)
+    tangram.s.anchor(tangram.t1b, 0, 1)
+    tangram.add(tangram.p)
+    tangram.p.flip()
+    tangram.p.anchor(tangram.s, 2)
+    tangram.p.rotate(180)
+    tangram.add(tangram.t2)
+    tangram.t2.anchor(tangram.p, 2)
 
 
 def build_direction_data(paragraph_style) -> DirectionSet:
@@ -727,13 +774,15 @@ def write_hint_files():
 
     story.append(Paragraph('Hints', style=heading_style))
     hint_texts = dedent('''\
-        This is how your puzzle quest starts.
+        This is how you begin your puzzle quest. Solve the start tangram using
+        all seven pieces. The medium triangle of each tangram points to the
+        next one to solve. The letters you visit make a secret word.
         
         But before you get too frustrated with a tangram, this booklet can give
         you some hints. There are three hints for each tangram and a solution.
         The first two hints for each tangram tell you the direction that the
         right angle corner of the two largest triangles point. Look at the
-        number for a hint, then look up that number in the big table on page 2
+        number for a hint, then look up that number in the big table on page 3
         to see which direction the triangle points.
         
         If you've looked up the hints for both large triangles and you still
@@ -759,8 +808,16 @@ def write_hint_files():
 
     direction_set = build_direction_data(paragraph_style)
 
-    hint1_number = direction_set.directions['NE'].pop()
-    hint2_number = direction_set.directions['SW'].pop()
+    e = 'E'
+    ne = 'NE'
+    n = 'N'
+    nw = 'NW'
+    w = 'W'
+    sw = 'SW'
+    s = 'S'
+    se = 'SE'
+    hint1_number = direction_set.directions[s].pop()
+    hint2_number = direction_set.directions[sw].pop()
     story.append(Spacer(1, 0.25*inch))
     story.append(Paragraph(
         f'The hints for the start puzzle are {hint1_number} and'
@@ -771,21 +828,13 @@ def write_hint_files():
     story.append(Table(direction_set.table_rows))
 
     directions = direction_set.directions
-    e = 'E'
-    ne = 'NE'
-    n = 'N'
-    nw = 'NW'
-    w = 'W'
-    sw = 'SW'
-    s = 'S'
-    se = 'SE'
-    add_hint_display(layout_pipe, story, directions, s, s, n)
-    add_hint_display(layout_skater, story, directions, ne, sw, s)
-    add_hint_display(layout_factory, story, directions, se, n, sw)
-    add_hint_display(layout_silo, story, directions, w, sw, se)
-    add_hint_display(layout_wrench, story, directions, s, sw, sw)
-    add_hint_display(layout_carrier, story, directions, w, ne, sw)
-    add_hint_display(layout_arrow, story, directions, s, nw, e)
+    add_hint_display(layout_goose, story, directions, sw, se, nw)
+    add_hint_display(layout_long_jump, story, directions, e, n, s)
+    add_hint_display(layout_thin_axe, story, directions, sw, sw, s)
+    add_hint_display(layout_factory, story, directions, se, nw, se)
+    add_hint_display(layout_fat_axe, story, directions, e, se, sw)
+    add_hint_display(layout_lighthouse, story, directions, nw, ne, n)
+    add_hint_display(layout_vulture, story, directions, sw, nw, w)
 
     doc.build(story)
 
@@ -801,44 +850,44 @@ def main():
     #     live_pdf.display((0, -100))
     #     return
 
-    letter_grid = LetterGrid(5, 6)
+    letter_grid = LetterGrid(5, 5)
     letter_grid.scale(100)
 
-    letter_grid.add('R', layout_ship)
-    letter_grid.add('C', layout_long_jump)
-    letter_grid.add('R', layout_saw)
-    letter_grid.add('P', layout_llama)
-    letter_grid.add('L', layout_thin_axe)
+    # TOSGR
+    # CIsEI
+    # KSRTH
+    # TYfAE
+    # ERYRO
 
-    letter_grid.add('M', layout_goat)
-    letter_grid.add('O', layout_giraffe)
-    letter_grid.add('start', layout_pipe)
-    letter_grid.add('E', layout_factory)
-    letter_grid.add('X', layout_tug)
+    letter_grid.add('D', layout_pipe)
+    letter_grid.add('A', layout_carrier)
+    letter_grid.add('E', layout_saw)
+    letter_grid.add('L', layout_llama)
+    letter_grid.add('A', layout_skater)
 
-    letter_grid.add('N', layout_kangaroo)
-    letter_grid.add('M', layout_laundry)
-    letter_grid.add('B', layout_skater)
-    letter_grid.add('I', layout_wrench)
-    letter_grid.add('G', layout_silo)
+    letter_grid.add('E', layout_goat)
+    letter_grid.add('K', layout_giraffe)
+    letter_grid.add('start', layout_goose)
+    letter_grid.add('E', layout_arrow)
+    letter_grid.add('K', layout_tug)
 
-    letter_grid.add('C', layout_ship)
-    letter_grid.add('E', layout_fat_axe)
-    letter_grid.add('S', layout_arrow)
-    letter_grid.add('N', layout_carrier)
-    letter_grid.add('L', layout_top)
-
-    letter_grid.add('I', layout_vulture)
-    letter_grid.add('O', layout_top)
-    letter_grid.add('end', layout_empty)
-    letter_grid.add('R', layout_vulture)
-    letter_grid.add('A', layout_thin_axe)
-
-    letter_grid.add('R', layout_pipe)
-    letter_grid.add('N', layout_factory)
-    letter_grid.add('G', layout_skater)
-    letter_grid.add('D', layout_wrench)
+    letter_grid.add('R', layout_kangaroo)
+    letter_grid.add('S', layout_long_jump)
+    letter_grid.add('T', layout_thin_axe)
+    letter_grid.add('S', layout_wrench)
     letter_grid.add('I', layout_silo)
+
+    letter_grid.add('T', layout_top)
+    letter_grid.add('A', layout_factory)
+    letter_grid.add('end', layout_empty)
+    letter_grid.add('S', layout_vulture)
+    letter_grid.add('H', layout_ship)
+
+    letter_grid.add('G', layout_skater)
+    letter_grid.add('E', layout_laundry)
+    letter_grid.add('R', layout_fat_axe)
+    letter_grid.add('T', layout_lighthouse)
+    letter_grid.add('O', layout_pipe)
 
     width = 1000
     height = 1200

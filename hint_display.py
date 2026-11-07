@@ -19,7 +19,7 @@ class HintDisplay:
 
         tangram.scale(scale)
         self.font_size = round(scale*0.1)
-        self.height = round(tangram.height + 4*self.font_size)
+        self.height = round(tangram.height + 3*self.font_size)
         self.width = round(tangram.width)
         left, bottom, right, top = tangram.bounds
         target_x = -tangram.width / 2
