@@ -392,7 +392,7 @@ dev = [
     { name = "reportlab", marker = "python_full_version >= '3.9' and python_full_version < '4'", specifier = "==5.0.0" },
     { name = "rlpycairo", marker = "python_full_version >= '3.7'", specifier = "==0.4.0" },
     { name = "space-tracer", specifier = "==4.13.0" },
-    { name = "svglib", marker = "python_full_version >= '3.9'", specifier = "==2.3.2" },
+    { name = "svglib", marker = "python_full_version >= '3.9'", specifier = "==2.4.0" },
     { name = "svgwrite", marker = "python_full_version >= '3.6'", specifier = "==1.4.3" },
     { name = "tinycss2", marker = "python_full_version >= '3.10'", specifier = "==1.5.1" },
     { name = "tomli", marker = "python_full_version >= '3.8'", specifier = "==2.5.0" },
@@ -697,7 +697,7 @@ wheels = [
 
 [[package]]
 name = "svglib"
-version = "2.3.2"
+version = "2.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cssselect2" },
@@ -706,9 +706,9 @@ dependencies = [
     { name = "reportlab" },
     { name = "tinycss2" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b8/61/d61e60e472937acc37ae098c2a547063ec0e698d5f6c3485cac97511e9bc/svglib-2.3.2.tar.gz", hash = "sha256:625b62cf440ab57f5def42d5be47a0d6b73c02711ef86ab1545650a98ac1ad5f", size = 1381814, upload-time = "2026-10-23T09:30:47.558Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3b/28/a6ee60efe99f951231e3e07436f98508d491eb47b9bb21318bd419c02b52/svglib-2.4.0.tar.gz", hash = "sha256:90f58628ca7e6d48b40f638ad0dab472f2994f823eb33a623c8fa28e434ce574", size = 1393162, upload-time = "2026-11-04T20:25:35.936Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d6/22/47e2a641280b0b0a4bf160710c6bde71836af2cf990e9440143b0786b4b4/svglib-2.3.2-py3-none-any.whl", hash = "sha256:ac27ab2b72afe0136d83a1a51046a83268be0cdb915156efa090ee58e60b669e", size = 51208, upload-time = "2026-10-23T09:30:46.165Z" },
+    { url = "https://files.pythonhosted.org/packages/17/1c/2e8b399682f171ecbe9a9bd0551c71229a43564b175ad2abfa541772dad3/svglib-2.4.0-py3-none-any.whl", hash = "sha256:0c69c9a7ce14d375f70fed2572f8db7ff4bd7e714be9e6476e392c8703bde97a", size = 55754, upload-time = "2026-11-04T20:25:34.3Z" },
 ]
 
 [[package]]
